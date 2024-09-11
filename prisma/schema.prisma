@@ -1,0 +1,167 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  username      String         @unique
+  email         String         @unique
+  fullName      String
+  avatar        String
+  coverImage    String?
+  password      String
+  refreshToken  String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Relations
+  videos        Video[]         // Videos uploaded by the user
+  shortVideos   ShortVideo[]    // Short videos uploaded by the user
+  comments      Comment[]       // Comments made by the user
+  likes         LikeUser[]      // Likes made by the user
+  tweets        Tweet[]         // Tweets made by the user
+  playlists     Playlist[]      // Playlists created by the user
+  subscriptions Subscription[]  @relation("UserSubscriptions") // Channels the user is subscribed to
+  subscribers   Subscription[]  @relation("UserSubscribers")   // Users who are subscribed to the channel
+}
+
+model Video {
+  id            String   @id @default(uuid())
+  videoFile     String   // URL or path to the video file
+  thumbnail     String   // URL or path to the thumbnail image
+  title         String   // Title of the video
+  description   String   // Description of the video
+  duration      Int      // Duration of the video in seconds
+  views         Int      @default(0)  // Number of views
+  isPublished   Boolean  @default(true)  // Whether the video is published
+  isFeatured    Boolean  @default(false) // Whether the video is featured
+  category      String   // Category of the video
+  tags          String[] // Tags associated with the video
+  createdAt     DateTime @default(now()) // Creation date
+  updatedAt     DateTime @updatedAt     // Last update date
+  publishedAt   DateTime? // Publication date
+
+  // Relations
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId       String   // Foreign key to User model
+  comments      Comment[]    // Comments associated with the video
+  likes         Like[]       // Likes associated with the video
+  playlists     PlaylistVideo[] // Playlists containing the video
+
+  // Optional fields for video statistics or monetization
+  viewsLast30Days Int   @default(0) // Views in the last 30 days
+  earnings        Float @default(0) // Earnings from ads or other sources
+}
+
+
+model ShortVideo {
+  id            String   @id @default(uuid())
+  shortVideoFile String
+  thumbnail     String
+  title         String
+  duration      Int       @default(60) // Short videos have a maximum duration of 60 seconds
+  views         Int       @default(0)
+  isPublished   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId       String
+  comments      Comment[] // Comments associated with the short video
+  likes         Like[]    // Likes associated with the short video
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  video     Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId   String?
+  shortVideo ShortVideo? @relation(fields: [shortVideoId], references: [id], onDelete: Cascade)
+  shortVideoId String?
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  likes     Like[]   // Likes associated with the comment
+}
+
+model Like {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  video     Video?    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId   String?
+  comment   Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String?
+  shortVideo ShortVideo? @relation(fields: [shortVideoId], references: [id], onDelete: Cascade)
+  shortVideoId String?
+  tweet     Tweet?    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  tweetId   String?
+  likedBy   LikeUser[] // Users who liked this content
+}
+
+model LikeUser {
+  id      String  @id @default(uuid())
+  like    Like    @relation(fields: [likeId], references: [id], onDelete: Cascade)
+  likeId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+}
+
+model Tweet {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  likes     Like[]   // Likes associated with the tweet
+}
+
+model Playlist {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  videos      PlaylistVideo[] // Videos in the playlist
+}
+
+model PlaylistVideo {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId String
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId    String
+}
+
+model Subscription {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  user        User     @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  channel     User     @relation("UserSubscribers", fields: [channelId], references: [id], onDelete: Cascade)
+  channelId   String
+}

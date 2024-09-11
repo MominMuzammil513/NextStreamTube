@@ -31,3 +31,29 @@ body {
     text-wrap: balance;
   }
 }
+
+.video-player-container {
+  position: relative;
+  background: black;
+  overflow: hidden;
+}
+
+.controls {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.play-pause {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.volume-control {
+  width: 100px;
+  margin-left: 1rem;
+}
