@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { Bookmark, BookMarked, Download, Flag, Save, Scissors, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 import { ShareSvg } from '../../../public/svgs/Svg';
 import Link from 'next/link';
+import DescriptionSection from './components/DescriptionSection';
 
 export const metadata: Metadata = {
   title: 'Watch Video',
@@ -25,6 +26,7 @@ interface Video {
   thumbnail: string;
   duration: number;
   views: number;
+  createdAt: string
   owner: {
     username: string;
     avatar: string;
@@ -103,6 +105,7 @@ const getVideo = async (id: string): Promise<Video | null> => {
         thumbnail: video.thumbnail,
         duration: video.duration,
         views: video.views,
+        createdAt: video.createdAt.toLocaleString(),
         owner: {
           username: video.owner.username,
           avatar: video.owner.avatar,
@@ -183,6 +186,7 @@ const getSuggestedVideos = async (currentVideo: Video): Promise<Video[]> => {
       thumbnail: video.thumbnail,
       duration: video.duration,
       views: video.views,
+      createdAt: video.createdAt.toLocaleString(),
       owner: {
         username: video.owner.username,
         avatar: video.owner.avatar,
@@ -229,6 +233,7 @@ const WatchPage: React.FC<WatchPageProps> = async ({ searchParams }) => {
   }
 
   const suggestedVideos = await getSuggestedVideos(video);
+  // console.log(suggestedVideos,"+++++++++++");
   const accessToken = cookies().get('accessToken');
   if (!accessToken) {
     return <div className='mt-20'>No user accessToken available</div>;
@@ -300,50 +305,48 @@ const WatchPage: React.FC<WatchPageProps> = async ({ searchParams }) => {
                     <path fillRule="evenodd" d="M6 12a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z" clipRule="evenodd" />
                   </svg>
 
-                {/* Dropdown menu */}
-                <div className="absolute top-full left-1.5 w-max rounded-lg shadow-lg bg-white dark:bg-[#2b2b2b] ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-focus-within:block z-50">
-                  <div className="py-1.5" role="none">
-                    {/* Dropdown Item 1 */}
-                    <Link
-                      href="#"
-                      className="dark:text-white flex justify-start gap-x-3 items-center font-medium hover:dark:bg-[#424040] hover:bg-opacity-55 pl-4 pr-6 py-2 text-sm"
-                      role="menuitem"
-                    >
-                      <Scissors className='h-5 w-5'/>Clips
-                    </Link>
-                    {/* Dropdown Item 2 */}
-                    <Link
-                      href="#"
-                      className="dark:text-white flex justify-start gap-x-3 items-center font-medium hover:dark:bg-[#424040] hover:bg-opacity-55 pl-4 pr-6 py-2 text-sm"
-                      role="menuitem"
-                    >
-                      <Bookmark className='h-5 w-5'/>Save
-                    </Link>
-                    {/* Dropdown Item 3 */}
-                    <Link
-                      href="#"
-                      className="dark:text-white flex justify-start gap-x-3 items-center font-medium hover:dark:bg-[#424040] hover:bg-opacity-55 pl-4 pr-6 py-2 text-sm"
-                      role="menuitem"
-                    >
-                      <Flag className='h-5 w-5'/>Report
-                    </Link>
+                  {/* Dropdown menu */}
+                  <div className="absolute top-full left-1.5 w-max rounded-lg shadow-lg bg-white dark:bg-[#2b2b2b] ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-focus-within:block z-50">
+                    <div className="py-1.5" role="none">
+                      {/* Dropdown Item 1 */}
+                      <Link
+                        href="#"
+                        className="dark:text-white flex justify-start gap-x-3 items-center font-medium hover:dark:bg-[#424040] hover:bg-opacity-55 pl-4 pr-6 py-2 text-sm"
+                        role="menuitem"
+                      >
+                        <Scissors className='h-5 w-5' />Clips
+                      </Link>
+                      {/* Dropdown Item 2 */}
+                      <Link
+                        href="#"
+                        className="dark:text-white flex justify-start gap-x-3 items-center font-medium hover:dark:bg-[#424040] hover:bg-opacity-55 pl-4 pr-6 py-2 text-sm"
+                        role="menuitem"
+                      >
+                        <Bookmark className='h-5 w-5' />Save
+                      </Link>
+                      {/* Dropdown Item 3 */}
+                      <Link
+                        href="#"
+                        className="dark:text-white flex justify-start gap-x-3 items-center font-medium hover:dark:bg-[#424040] hover:bg-opacity-55 pl-4 pr-6 py-2 text-sm"
+                        role="menuitem"
+                      >
+                        <Flag className='h-5 w-5' />Report
+                      </Link>
+                    </div>
                   </div>
-                </div>
                 </button>
               </div>
-
-
             </div>
           </div>
-          <div className='mt-6 px-3 py-2.5 dark:bg-[#2b2b2b] bg-white rounded-lg'>
+          {/* description Section */}
+          {/* <div className='mt-6 px-3 py-2.5 dark:bg-[#2b2b2b] bg-white rounded-lg flex flex-col'>
             <div className='flex justify-start items-center gap-x-2'>
               <h1 className='font-medium flex justify-center items-center'>{video.views} views</h1>
               <h1 className='font-medium flex justify-center items-center'>6 hours</h1>
             </div>
-          </div>
-          {/* Likes Section */}
-          <LikesSection likes={video.likes} description={video.description} />
-
+            <p className='h-16 mt-4'>{video.description}</p>
+          </div> */}
+          <DescriptionSection description={video.description} uploadTime={video.createdAt} views={video.views}/>
           {/* Comments Section */}
           <CommentsSection videoId={videoId} currentUser={currentUser} />
         </div>
@@ -352,12 +355,6 @@ const WatchPage: React.FC<WatchPageProps> = async ({ searchParams }) => {
         <div className="w-1/3 ml-4">
           <SuggestedVideosSection videos={suggestedVideos} />
         </div>
-      </div>
-
-      {/* Video Details */}
-      <div className="mt-6">
-        <h2 className="text-2xl font-bold text-white">{video.title}</h2>
-        <p className="text-gray-400 mt-2">{video.description}</p>
       </div>
     </div>
   );

@@ -38,9 +38,9 @@ const SuggestedVideosSection: React.FC<SuggestedVideosSectionProps> = ({ videos 
     <div className="mt-8 pl-10 pr-8">
       <h3 className="text-xl font-bold text-white">You May Also Like</h3>
       <div className="mt-4 flex flex-col">
-        {dummySuggestedVideos.map(video => (
+        {videos.map(video => (
           <div key={video.id} className="relative group">
-            <Link href={`/video/${video.id}`}>
+            <Link href={`/video?id=${video.id}`}>
               <div className="block">
                 <div className="relative w-full h-36 md:h-48">
                   <Image
