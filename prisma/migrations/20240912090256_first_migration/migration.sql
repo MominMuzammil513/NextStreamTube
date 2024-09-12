@@ -1,14 +1,44 @@
-/*
-  Warnings:
+-- CreateEnum
+CREATE TYPE "LikeType" AS ENUM ('LIKE', 'DISLIKE');
 
-  - Made the column `ownerId` on table `Video` required. This step will fail if there are existing NULL values in that column.
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "fullName" TEXT NOT NULL,
+    "avatar" TEXT NOT NULL,
+    "coverImage" TEXT,
+    "password" TEXT NOT NULL,
+    "refreshToken" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-*/
--- DropForeignKey
-ALTER TABLE "Video" DROP CONSTRAINT "Video_ownerId_fkey";
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
--- AlterTable
-ALTER TABLE "Video" ALTER COLUMN "ownerId" SET NOT NULL;
+-- CreateTable
+CREATE TABLE "Video" (
+    "id" TEXT NOT NULL,
+    "videoFile" TEXT NOT NULL,
+    "thumbnail" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "duration" INTEGER NOT NULL,
+    "views" INTEGER NOT NULL DEFAULT 0,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "isFeatured" BOOLEAN NOT NULL DEFAULT false,
+    "category" TEXT NOT NULL,
+    "tags" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "publishedAt" TIMESTAMP(3),
+    "ownerId" TEXT NOT NULL,
+    "viewsLast30Days" INTEGER NOT NULL DEFAULT 0,
+    "earnings" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "Video_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "ShortVideo" (
@@ -34,7 +64,9 @@ CREATE TABLE "Comment" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "videoId" TEXT,
     "shortVideoId" TEXT,
+    "userLikeStatus" TEXT NOT NULL DEFAULT 'NONE',
     "ownerId" TEXT NOT NULL,
+    "parentId" TEXT,
 
     CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
 );
@@ -44,6 +76,7 @@ CREATE TABLE "Like" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "type" "LikeType" NOT NULL,
     "videoId" TEXT,
     "commentId" TEXT,
     "shortVideoId" TEXT,
@@ -95,6 +128,22 @@ CREATE TABLE "PlaylistVideo" (
     CONSTRAINT "PlaylistVideo_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Subscription" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT NOT NULL,
+    "channelId" TEXT NOT NULL,
+
+    CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
 -- AddForeignKey
 ALTER TABLE "Video" ADD CONSTRAINT "Video_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -109,6 +158,9 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_shortVideoId_fkey" FOREIGN KEY ("s
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Like" ADD CONSTRAINT "Like_videoId_fkey" FOREIGN KEY ("videoId") REFERENCES "Video"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -139,3 +191,9 @@ ALTER TABLE "PlaylistVideo" ADD CONSTRAINT "PlaylistVideo_playlistId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "PlaylistVideo" ADD CONSTRAINT "PlaylistVideo_videoId_fkey" FOREIGN KEY ("videoId") REFERENCES "Video"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_channelId_fkey" FOREIGN KEY ("channelId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

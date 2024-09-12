@@ -1,7 +1,7 @@
 // app/api/comments/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
-import { verifyAccessToken } from '@/lib/session';// Ensure you have this utility function
+import { verifyAccessToken } from '@/lib/session'; // Ensure you have this utility function
 
 async function getUserFromToken(req: NextRequest) {
   const accessToken = req.cookies.get("accessToken");
@@ -21,7 +21,7 @@ async function getUserFromToken(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+  const searchParams = req.nextUrl.searchParams;
   const videoId = searchParams.get('videoId');
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '10');
@@ -36,8 +36,20 @@ export async function GET(req: NextRequest) {
       include: {
         owner: {
           select: {
+            id: true,
             username: true,
             avatar: true,
+          },
+        },
+        replies: {
+          include: {
+            owner: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
           },
         },
       },
@@ -47,7 +59,6 @@ export async function GET(req: NextRequest) {
     });
 
     const totalComments = await prisma.comment.count({ where: { videoId } });
-    console.log(comments,"============================",totalComments);
 
     return NextResponse.json({ comments, totalComments });
   } catch (error) {
@@ -56,19 +67,83 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// export async function GET(req: NextRequest) {
+//   const searchParams = req.nextUrl.searchParams;
+//   const videoId = searchParams.get('videoId');
+//   const page = parseInt(searchParams.get('page') || '1');
+//   const limit = parseInt(searchParams.get('limit') || '10');
+
+//   if (!videoId) {
+//     return NextResponse.json({ error: 'Video ID is required' }, { status: 400 });
+//   }
+
+//   try {
+//     // Fetch comments along with owner, replies, and likes count
+//     const comments = await prisma.comment.findMany({
+//       where: { videoId },
+//       include: {
+//         owner: {
+//           select: {
+//             id: true,
+//             username: true,
+//             avatar: true,
+//           },
+//         },
+//         replies: {
+//           include: {
+//             owner: {
+//               select: {
+//                 id: true,
+//                 username: true,
+//                 avatar: true,
+//               },
+//             },
+//             // Include likes for replies
+//             likes: true,
+//           },
+//         },
+//         // Include likes for top-level comments
+//         likes: true,
+//       },
+//       orderBy: { createdAt: 'desc' },
+//       skip: (page - 1) * limit,
+//       take: limit,
+//     });
+
+//     // Calculate the total number of comments
+//     const totalComments = await prisma.comment.count({ where: { videoId } });
+
+//     // Map comments to include likes count
+//     const commentsWithLikesCount = comments.map((comment) => ({
+//       ...comment,
+//       likesCount: comment.likes.length, // Count likes for each comment
+//       replies: comment.replies.map((reply) => ({
+//         ...reply,
+//         likesCount: reply.likes.length, // Count likes for each reply
+//       })),
+//     }));
+// console.log(comments.map((co)=>co.replies.map((l)=>l.likes)),"comments",totalComments);
+//     return NextResponse.json({ comments: commentsWithLikesCount, totalComments });
+//   } catch (error) {
+//     console.error('Error fetching comments:', error);
+//     return NextResponse.json({ error: 'Error fetching comments' }, { status: 500 });
+//   }
+// }
+
+
 export async function POST(req: NextRequest) {
     const user = await getUserFromToken(req);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-  console.log(user,"UUUUUUUUUUUUUUUUUUU");
+  // console.log(user,"UUUUUUUUUUUUUUUUUUU");
     const { videoId, content } = await req.json();
   
     if (!videoId || !content) {
       return NextResponse.json({ error: 'Video ID and content are required' }, { status: 400 });
     }
   
-    console.log('Creating comment with data:', { content, videoId, ownerId: user.id });
+    // console.log('Creating comment with data:', { content, videoId, ownerId: user.id });
   
     try {
       // Create the comment
@@ -88,7 +163,7 @@ export async function POST(req: NextRequest) {
         },
       });
   
-      console.log('Comment created:', comment);
+      // console.log('Comment created:', comment);
       return NextResponse.json(comment,{status:201});
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -176,7 +251,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { searchParams } = new URL(req.url);
+  const searchParams = await req.nextUrl.searchParams
   const commentId = searchParams.get('commentId');
 
   if (!commentId) {

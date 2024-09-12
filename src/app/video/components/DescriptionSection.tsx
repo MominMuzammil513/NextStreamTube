@@ -1,5 +1,5 @@
-"use client"
-import React, { useState, useRef } from 'react';
+"use client";
+import React, { useState, useEffect } from "react";
 
 interface DescriptionSectionProps {
   description: string;
@@ -11,7 +11,9 @@ interface DescriptionSectionProps {
 const formatUploadTime = (uploadTime: string) => {
   const now = new Date();
   const uploadDate = new Date(uploadTime);
-  const differenceInSeconds = Math.floor((now.getTime() - uploadDate.getTime()) / 1000);
+  const differenceInSeconds = Math.floor(
+    (now.getTime() - uploadDate.getTime()) / 1000
+  );
 
   if (differenceInSeconds < 60) {
     return `${differenceInSeconds} seconds ago`;
@@ -30,27 +32,68 @@ const formatUploadTime = (uploadTime: string) => {
   }
 };
 
-const DescriptionSection: React.FC<DescriptionSectionProps> = ({ description, views, uploadTime }) => {
+const DescriptionSection: React.FC<DescriptionSectionProps> = ({
+  description,
+  views,
+  uploadTime,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const descriptionRef = useRef<HTMLParagraphElement | null>(null);
+  const [showButton, setShowButton] = useState(false);
+  const [displayText, setDisplayText] = useState(description);
 
-  const handleToggle = () => {
-    setIsExpanded(!isExpanded);
-  };
-
+  const characterLimit = 200; // Character limit to show truncated text
   const formattedUploadTime = formatUploadTime(uploadTime);
 
+  useEffect(() => {
+    if (description.length > characterLimit) {
+      setDisplayText(description.slice(0, characterLimit) + "...");
+      setShowButton(true); // Show 'more' button if text exceeds the limit
+    } else {
+      setDisplayText(description);
+      setShowButton(false); // Hide 'more' button if text is short
+    }
+  }, [description]);
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+    if (!isExpanded) {
+      setDisplayText(description); // Show full text when expanded
+    } else {
+      setDisplayText(description.slice(0, characterLimit) + "..."); // Show truncated text when collapsed
+    }
+  };
+
   return (
-    <div className='mt-6 px-3 py-2.5 dark:bg-[#2b2b2b] bg-white rounded-lg flex flex-col'>
-      <div className='flex justify-start items-center gap-x-2'>
-        <h1 className='font-medium flex justify-center items-center'>{views} views</h1>
-        <h1 className='font-medium flex justify-center items-center'>{formattedUploadTime}</h1>
+    <div className="mt-6 px-3 py-2.5 dark:bg-[#2b2b2b] bg-white rounded-lg flex flex-col">
+      <div className="flex justify-start items-center gap-x-2">
+        <h1 className="font-medium flex justify-center items-center">{views} views</h1>
+        <h1 className="font-medium flex justify-center items-center">{formattedUploadTime}</h1>
       </div>
-      <div className={`mt-4 overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-screen' : 'max-h-16'}`}>
-        <p ref={descriptionRef} className={`text-black dark:text-white`}>
-          {description} 
+
+      <div
+        className={`mt-4 overflow-hidden transition-all duration-300 ease-in-out ${
+          isExpanded ? "max-h-full" : "max-h-20"
+        }`}
+      >
+        <p>
+          {displayText}
+          {showButton && !isExpanded && (
+            <button
+              onClick={toggleExpanded}
+              className="ml-1 text-sm font-semibold text-blue-600 hover:text-blue-800"
+            >
+              more
+            </button>
+          )}
         </p>
-        <span onClick={handleToggle} className='my-2 hover:text-blue-300 font-medium'>{isExpanded ? 'show Less' : '...more'}</span>
+        {showButton && isExpanded && (
+          <button
+            onClick={toggleExpanded}
+            className="mt-2 text-sm font-semibold text-blue-600 hover:text-blue-800"
+          >
+            Show less
+          </button>
+        )}
       </div>
     </div>
   );

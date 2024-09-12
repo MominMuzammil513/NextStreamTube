@@ -350,7 +350,6 @@ const WatchPage: React.FC<WatchPageProps> = async ({ searchParams }) => {
           {/* Comments Section */}
           <CommentsSection videoId={videoId} currentUser={currentUser} />
         </div>
-
         {/* Suggested Videos */}
         <div className="w-1/3 ml-4">
           <SuggestedVideosSection videos={suggestedVideos} />
