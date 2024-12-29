@@ -41,7 +41,7 @@ interface MenuItemProps {
 
 const MenuItem: React.FC<MenuItemProps> = ({ label, onClick, rightElement }) => (
   <div
-    className="flex justify-between items-center py-2 px-4 hover:bg-gray-700 cursor-pointer"
+    className="flex justify-between color items-center py-2 px-4 hover:bg-gray-700 cursor-pointer"
     onClick={onClick}
   >
     <span>{label}</span>
@@ -284,7 +284,7 @@ const CustomVideoPlayer: React.FC<VideoPlayerProps> = ({ videoFile, thumbnail, t
               videoRef.current.currentTime = (newProgress / 100) * videoRef.current.duration;
             }
           }}
-            className="w-full h-1 bg-gray-600 rounded-full appearance-none cursor-pointer"
+            className="w-full h-1 gree bg-gray-600 rounded-full appearance-none cursor-pointer"
             style={{
               background: `linear-gradient(to right, #ff0000 0%, #ff0000 ${progress}%, #4d4d4d ${progress}%, #4d4d4d 100%)`,
             }}
